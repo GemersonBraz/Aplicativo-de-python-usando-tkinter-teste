@@ -30,7 +30,7 @@ def mudar_tema():
 
 def formatar_placa(event,placa):
 
-    # Obtém o valor da placa até agora
+    # Obtém o valor da placa
     texto = placa.get()
 
     # Remove caracteres não alfabéticos e não numéricos
@@ -237,44 +237,12 @@ treeview.column("Destino",width=100)
 treeview.column("Hora",width=100)
 treeview.column("OBS",width=100)
 
-
 treeview.pack()
 treeScroll.config(command=treeview.yview)
 
 
-
-
-
 #rodando nossa janela
 root.mainloop()
-"""
-#na segunda tela teremos o cadastro dos seguintes elementos
 
 
-"""
-#validade
-
-#émilitar?
-#veiculo
-#cor
-#placa
-#destino
-#hora
-
-
-
-
-
-#botao editar cadastro
-#
-#
-#
-#
-
-
-#
-#
-#
-#
-#
 
