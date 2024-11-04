@@ -1,23 +1,192 @@
 from tkinter import * 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import openpyxl
 from datetime import datetime
+from fpdf import FPDF
+from tkinter import filedialog
+import pandas as pd
 
-#Backend
-def cadastrar(documento, nome, validade, militar, veiculo, placa, cor):
-    print("Cadastro Realizado:")
-    print(f"Documento: {documento}")
-    print(f"Nome: {nome}")
-    print(f"Validade: {validade}")
-    print(f"É Militar: {militar}")
-    print(f"Veículo: {veiculo}")
-    print(f"Placa: {placa}")
-    print(f"Cor: {cor}")
+def verifica_se_existe_cadastro(doc):
+    #ler a tabela do excel
+    df = pd.read_excel('funcionarios.xlsx')
 
+    #verifica se o documento já existe
+    if doc in df['Documento'].values:
+        print("este cadastro ja existe.")
+        return True
+    else:
+        print("cadastro disponivel.")
+        return False
+    
+#Essa funcao seleciona 1 item da treeview e apaga
+def apagar(treeview):  
+    # Obtém a seleção atual
+    selecionado = treeview.selection()
+    
+    if not selecionado:
+        # Se não houver seleção, exibe uma mensagem
+        print("Nao tem item selecionado")
+        messagebox.showinfo("Nenhum item selecionado", "Por favor, selecione um item para deletar.")
+        return
+
+    # Deleta cada item selecionado
+    for item in selecionado:
+        treeview.delete(item)
+    print("Item deletado", "O item selecionado foi deletado com sucesso.")
+    messagebox.showinfo("Item deletado", "O item selecionado foi deletado com sucesso.")
+
+
+def registrar():
+    cadastro = inserir_cadastro.get().strip()
+    destino = inserir_destino.get().strip()
+    obs = inserir_obs.get().strip()
+    
+    # Verifica se os campos obrigatórios estão preenchidos
+    if not cadastro:
+        messagebox.showwarning("Campo Vazio", "Por favor, preencha o campo 'Cadastro'.")
+        return
+    if not destino:
+        messagebox.showwarning("Campo Vazio", "Por favor, preencha o campo 'Destino'.")
+        return
+
+    # Lê a tabela do Excel
+    df = pd.read_excel('funcionarios.xlsx')
+
+    # Verifica se o cadastro existe
+    if cadastro not in df['Documento'].values:
+        messagebox.showerror("Cadastro Não Encontrado", "Esse cadastro não existe.")
+        return
+    
+    # Obtém os dados do cadastro
+    linha = df.loc[df['Documento'] == cadastro].iloc[0]
+    # Obtém a hora atual
+    hora_atual = datetime.now().strftime("%H:%M:%S")
+    if obs == "OBS":
+        obs = ""
+    linha = list(linha)    
+    linha.append(destino)
+    linha.append(hora_atual)
+    linha.append(obs)
+    
+
+        
+    print(list(linha))
+
+    #imprime a lista na treewiew
+    treeview.insert("","end", values=linha)
+    # Obtenha outros dados conforme necessário
+    
+    
+
+
+    # Limpa os campos
+    inserir_cadastro.delete(0, tk.END)
+    inserir_destino.delete(0, tk.END)
+    inserir_obs.delete(0, tk.END)
+    
 
 
     
+
+
+def salvar_pdf():
+    # Abre uma janela de diálogo para o usuário escolher o local e nome do arquivo
+    filepath = filedialog.asksaveasfilename(
+        defaultextension=".pdf",
+        filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
+        title="Salvar como"
+    )
+    
+    if not filepath:  # Se o usuário cancelar o diálogo, sai da função
+        return
+    
+    # Cria o PDF
+    pdf = FPDF(orientation="L")
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", size=10)
+
+    # Adiciona o cabeçalho da tabela
+    colunas = ["Documento", "Nome", "Validade", "Militar", "Veículo", "Placa", "Cor", "Destino", "Hora", "OBS"]
+    pdf.set_fill_color(200, 200, 200)  # Cor de fundo para o cabeçalho
+    pdf.set_text_color(0, 0, 0)  # Cor do texto
+
+    # Define a largura das colunas no PDF
+    largura_colunas = [25, 40, 20, 10, 30, 20, 15, 20, 20, 30]
+    for col, largura in zip(colunas, largura_colunas):
+        pdf.cell(w=largura, h=10, txt=col, border=1, align='C', fill=True)
+    pdf.ln()  # Nova linha
+
+    # Adiciona os dados da Treeview ao PDF
+    for row_id in treeview.get_children():
+        row = treeview.item(row_id)["values"]
+        for item, largura in zip(row, largura_colunas):
+            pdf.cell(w=largura, h=10, txt=str(item), border=1, align='C')
+        pdf.ln()  # Nova linha para cada registro
+
+    # Salva o PDF no caminho especificado
+    pdf.output(filepath)
+    print(f"PDF salvo em: {filepath}")
+
+
+
+#Backend
+def carregar_dados():
+    path = r"C:\Users\GG\Desktop\app cadastro de entrada\funcionarios.xlsx"
+    arquivo_tabela = openpyxl.load_workbook(path)
+    tabela = arquivo_tabela.active
+
+    lista_de_valores = list(tabela.values)
+    print(lista_de_valores)
+
+    for nome_na_tabela in colunas:
+        treeview.heading(nome_na_tabela, text=nome_na_tabela)
+
+    #for valor_da_tabela in lista_de_valores[0:]:
+     #   treeview.insert("",tk.END,values=valor_da_tabela)
+
+
+
+def cadastrar(documento, nome, validade, militar_var, veiculo, placa, cor_entrada, nova_janela):
+
+    doc = documento.get()
+    nm = nome.get()
+    val = validade.get()
+    mil = militar_var.get()
+    vec = veiculo.get()
+    pl = placa.get()
+    cor = cor_entrada.get()
+    verifica_se_existe_cadastro(doc)
+    if verifica_se_existe_cadastro(doc) == True:
+        print("Esse cadastro ja esxite")
+        nova_janela.destroy()
+    else:
+        print("Cadastro Realizado:")
+        print(f"Documento: {doc}")
+        print(f"Nome: {nm}")
+        print(f"Validade: {val}")
+        print(f"É Militar: {mil}")
+        print(f"Veículo: {vec}")
+        print(f"Placa: {pl}")
+        print(f"Cor: {cor}")
+        
+
+        #salvar dados na folha do excel
+        path = r"C:\Users\GG\Desktop\app cadastro de entrada\funcionarios.xlsx"
+        arquivo_tabela = openpyxl.load_workbook(path)
+        tabela = arquivo_tabela.active
+        valor_das_linhas = [doc,nm,val,mil,vec,pl,cor]
+        tabela.append(valor_das_linhas)
+        arquivo_tabela.save(path)
+
+        #inserir dados salvo na treeview
+        treeview.insert("",tk.END,values=valor_das_linhas)
+        print("cadastro realizado com sucesso")
+        
+
+        #limpar e colocar os dados iniciais dos nossos campos
+        nova_janela.destroy()
 
 #---------------------------------------------------------------------------------------------
 
@@ -30,7 +199,7 @@ def mudar_tema():
 
 def formatar_placa(event,placa):
 
-    # Obtém o valor da placa
+    # Obtém o valor da placa até agora
     texto = placa.get()
 
     # Remove caracteres não alfabéticos e não numéricos
@@ -57,7 +226,17 @@ def formatar_placa(event,placa):
     placa.delete(0, tk.END)
     placa.insert(0, texto)
     
-
+def formatar_documento(event,documento):
+    # Obtém o texto digitado até agora
+    texto = documento.get()
+    # Remove qualquer caractere que não seja dígito para simplificar
+    texto = ''.join(filter(str.isdigit, texto))
+     # Remove zeros à esquerda
+    texto = texto.lstrip('0')  # ou texto = str(int(texto)) se preferir
+    # Atualiza o campo de entrada com o texto formatado
+    documento.delete(0, tk.END)
+    documento.insert(0, texto)
+    documento.set(texto)
 
 
 def formatar_validade(event,validade):
@@ -112,7 +291,9 @@ def nova_janela_cadastro():
     documento = ttk.Entry(frame_principal)
     documento.insert(0, "Documento")
     documento.bind("<FocusIn>", lambda e: documento.delete(0, "end"))
+    documento.bind("<KeyRelease>", lambda event: formatar_documento(event, documento))
     documento.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+    
 
     # Nome
     ttk.Label(frame_principal, text="Nome: ").grid(row=2, column=0, padx=(5), pady=5, sticky="w")
@@ -120,6 +301,7 @@ def nova_janela_cadastro():
     nome.insert(0, "Nome")
     nome.bind("<FocusIn>", lambda e: nome.delete(0, "end"))
     nome.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+    
 
     # Validade do Documento
     ttk.Label(frame_principal, text="Validade do Documento:").grid(row=3, column=0, padx=(5), pady=5, sticky="w")
@@ -128,6 +310,8 @@ def nova_janela_cadastro():
     validade.bind("<FocusIn>", lambda e: validade.delete(0, "end"))
     validade.bind("<KeyRelease>", lambda event: formatar_validade(event, validade))
     validade.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+    
+    
 
     # É Militar (Sim ou Não)
     ttk.Label(frame_principal, text="Militar?").grid(row=4, column=0, padx=(5), pady=5, sticky="w")
@@ -136,6 +320,7 @@ def nova_janela_cadastro():
     radio_nao = ttk.Radiobutton(frame_principal, text="Não", variable=militar_var, value="N")
     radio_sim.grid(row=4, column=1, padx=(5, 25), pady=5, sticky="e")
     radio_nao.grid(row=4, column=1, padx=(25, 0), pady=5, sticky="w")  # Alinhamento dos botões
+    
 
     # Veículo
     ttk.Label(frame_principal, text="Veículo: ").grid(row=5, column=0, padx=(5), pady=5, sticky="w")
@@ -143,6 +328,7 @@ def nova_janela_cadastro():
     veiculo.insert(0, "Veículo")
     veiculo.bind("<FocusIn>", lambda e: veiculo.delete(0, "end"))
     veiculo.grid(row=5, column=1, padx=5, pady=5, sticky="ew")
+    
 
     # Placa
     ttk.Label(frame_principal, text="Placa: ").grid(row=6, column=0, padx=(5), pady=5, sticky="w")
@@ -151,25 +337,27 @@ def nova_janela_cadastro():
     placa.bind("<FocusIn>", lambda e: placa.delete(0, "end"))
     placa.bind("<KeyRelease>", lambda event: formatar_placa(event, placa))
     placa.grid(row=6, column=1, padx=5, pady=5, sticky="ew")
+    
+    
 
     # Cor
     ttk.Label(frame_principal, text="Cor: ").grid(row=7, column=0, padx=(5), pady=5, sticky="w")
-    cor = ttk.Combobox(frame_principal, values=["Branco", "Preto", "Cinza", "Prata", "Vermelho", "Verde", "Amarelo", "Azul", "Dourado", "Vinho"])
-    cor.grid(row=7, column=1, padx=5, pady=5, sticky="ew")
+    cor_entrada = ttk.Combobox(frame_principal, values=["Branco", "Preto", "Cinza", "Prata", "Vermelho", "Verde", "Amarelo", "Azul", "Dourado", "Vinho"])
+    cor_entrada.grid(row=7, column=1, padx=5, pady=5, sticky="ew")
+    
 
     # Botão para salvar o cadastro
-    botao_salvar = ttk.Button(frame_principal, text="Salvar Cadastro", command=lambda: cadastrar(
-        documento.get(),
-        nome.get(),
-        validade.get(),
-        militar_var.get(),
-        veiculo.get(),
-        placa.get(),
-        cor.get()
-    ))
+    botao_salvar = ttk.Button(frame_principal, text="Salvar Cadastro", command=lambda: cadastrar(documento, nome, validade, militar_var, veiculo, placa, cor_entrada, nova_janela))
     botao_salvar.grid(row=8, column=0, columnspan=2, padx=5, pady=(10, 5), sticky="ew")
 
+    # Função para fechar a janela
+    def fechar_janela(event=None):
+        nova_janela.destroy()
 
+    nova_janela.bind("<Escape>", fechar_janela)
+
+    
+    
     
 
 
@@ -197,25 +385,49 @@ frame_principal.pack()
 widgets_frame = ttk.LabelFrame( frame_principal, text="Insira os dados")
 widgets_frame.grid(row=0, column=0, padx=10, pady=10)
 
-#criando os campos do nosso formulario
+#inserir cadastro
 inserir_cadastro = ttk.Entry(widgets_frame)
 inserir_cadastro.insert(0,"Cadastro")
-inserir_cadastro.bind("<FocusIn>", lambda e:inserir_cadastro.delete("0","end"))
+inserir_cadastro.bind("<FocusIn>", lambda e: inserir_cadastro.delete(0, "end") if inserir_cadastro.get() == "Cadastro" else None)
 inserir_cadastro.grid(row=0,column=0,padx=5,pady=5,sticky="ew")
+inserir_cadastro.bind("<KeyRelease>", lambda event: formatar_documento(event, inserir_cadastro))
+
+#Destino
+inserir_destino = ttk.Entry(widgets_frame)
+inserir_destino.insert(0,"Destino")
+inserir_destino.bind("<FocusIn>", lambda e:inserir_destino.delete("0","end"))
+inserir_destino.grid(row=1,column=0,padx=5,pady=5,sticky="ew")
+
+#Obs
+inserir_obs = ttk.Entry(widgets_frame)
+inserir_obs.insert(0,"OBS")
+inserir_obs.bind("<FocusIn>", lambda e:inserir_obs.delete("0","end"))
+inserir_obs.grid(row=2,column=0,padx=5,pady=(5,50),sticky="ew")
+
+#botao salvar
+botao_salvar = tk.Button(widgets_frame, text="Salvar",command=salvar_pdf)
+botao_salvar.grid(row=7,column=0,padx=5,pady=5,sticky="ew")
 
 
 #botao para cadastro
 botao_novo_cadastro = tk.Button(widgets_frame, text="Novo Cadastro", command=nova_janela_cadastro)
-botao_novo_cadastro.grid(row=1,column=0,padx=5,pady=5,sticky="ew")
+botao_novo_cadastro.grid(row=5,column=0,padx=5,pady=5,sticky="ew")
 
 #separador
 separador = ttk.Separator(widgets_frame)
-separador.grid(row=2,column=0,padx=5,pady=5,sticky="ew")
+separador.grid(row=8,column=0,padx=5,pady=5,sticky="ew")
 
 #switch do tema
 botao_tema = ttk.Checkbutton(widgets_frame,text="Tema",style="Switch",command=mudar_tema)
-botao_tema.grid(row=3,column=0,padx=50,pady=(5,10),sticky="ew")
+botao_tema.grid(row=9,column=0,padx=50,pady=(5,10),sticky="ew")
 
+#botao para registro
+botao_registro = tk.Button(widgets_frame, text="Registro", command=registrar)
+botao_registro.grid(row=4,column=0,padx=5,pady=5,sticky="ew")
+
+#botao para apagar registro
+botao_apagar_registro = tk.Button(widgets_frame, text="Apagar", command=lambda: apagar (treeview))
+botao_apagar_registro.grid(row=6,column=0,padx=5,pady=5,sticky="ew")
 
 #criando a treeview do banco de dados
 treeFrame = ttk.Frame(frame_principal)
@@ -223,26 +435,59 @@ treeFrame.grid(row=0, column=1,padx=(0,20),pady=10)
 treeScroll = ttk.Scrollbar(treeFrame)
 treeScroll.pack(side="right",fill="y")
 
-colunas = ("Documento","Nome","Validade","Militar","Veiculo","Placa","Cor","Destino","Hora","OBS")
+colunas = ("ID","Documento","Nome","Validade","Militar","Veiculo","Placa","Cor","Destino","Hora","OBS")
 treeview = ttk.Treeview(treeFrame, show="headings", yscrollcommand=treeScroll.set, columns=colunas, height=20)
 
-treeview.column("Documento",width=100)
-treeview.column("Nome",width=100)
-treeview.column("Validade",width=100)
-treeview.column("Militar",width=100)
-treeview.column("Veiculo",width=100)
-treeview.column("Placa",width=100)
-treeview.column("Cor",width=100)
-treeview.column("Destino",width=100)
-treeview.column("Hora",width=100)
-treeview.column("OBS",width=100)
+treeview.column("ID",width=20,anchor="center")
+treeview.column("Documento",width=100,anchor="center")
+treeview.column("Nome",width=150,anchor="center")
+treeview.column("Validade",width=60,anchor="center")
+treeview.column("Militar",width=35,anchor="center")
+treeview.column("Veiculo",width=60,anchor="center")
+treeview.column("Placa",width=70,anchor="center")
+treeview.column("Cor",width=100,anchor="center")
+treeview.column("Destino",width=100,anchor="center")
+treeview.column("Hora",width=53,anchor="center")
+treeview.column("OBS",width=100,anchor="center")
+
 
 treeview.pack()
 treeScroll.config(command=treeview.yview)
 
 
+carregar_dados()
+
+
 #rodando nossa janela
 root.mainloop()
+"""
+#na segunda tela teremos o cadastro dos seguintes elementos
 
 
+"""
+#validade
+
+#émilitar?
+#veiculo
+#cor
+#placa
+#destino
+#hora
+
+
+
+
+
+#botao editar cadastro
+#
+#
+#
+#
+
+
+#
+#
+#
+#
+#
 
