@@ -7,6 +7,8 @@ from fpdf import FPDF
 from tkinter import filedialog
 import pandas as pd
 
+#global proximo_ID = 1
+
 def verifica_se_existe_cadastro(doc):
     #ler a tabela do excel
     df = pd.read_excel('funcionarios.xlsx')
@@ -64,7 +66,8 @@ def registrar():
     hora_atual = datetime.now().strftime("%H:%M:%S")
     if obs == "OBS":
         obs = ""
-    linha = list(linha)    
+    linha = list(linha)
+
     linha.append(destino)
     linha.append(hora_atual)
     linha.append(obs)
@@ -181,9 +184,15 @@ def cadastrar(documento, nome, validade, militar_var, veiculo, placa, cor_entrad
         arquivo_tabela.save(path)
 
         #inserir dados salvo na treeview
-        treeview.insert("",tk.END,values=valor_das_linhas)
-        print("cadastro realizado com sucesso")
+        #treeview.insert("",tk.END,values=valor_das_linhas)
         
+       
+
+
+        print("cadastro realizado com sucesso")
+        inserir_cadastro.insert(0,doc)
+
+
 
         #limpar e colocar os dados iniciais dos nossos campos
         nova_janela.destroy()
@@ -205,22 +214,28 @@ def formatar_placa(event,placa):
     # Remove caracteres não alfabéticos e não numéricos
     texto = ''.join(filter(lambda x: x.isalnum(), texto))
 
-    # Verifica se a placa está nos formatos válidos
-    if len(texto) <= 3:  # Se a entrada tem até 3 caracteres, mantém
-        texto = texto.upper()  # Garante que as letras estejam em maiúsculas
-    elif len(texto) == 4:  # Se a entrada tem 4 caracteres
-        texto = texto[:3].upper() + texto[3]  # A 4ª letra pode ser minúscula
-    elif len(texto) >= 5:  # Se a entrada tem 5 ou mais caracteres
-        # Formata para 'xxx0x00' ou 'xxx0000'
-        if len(texto) <= 7:
-            texto = (
-                texto[:3].upper() +  # 1ª, 2ª e 3ª letras maiúsculas
-                texto[3].upper() +   # 4ª letra (número) deve ser mantida
-                texto[4].upper() +   # 5ª letra maiúscula
-                texto[5:7]           # 6ª e 7ª letras
-            )
-        else:
-            texto = texto[:3].upper() + texto[3:7]  # Formato 'xxx0000'
+    # Condição para as três primeiras posições serem letras
+    if len(texto) >= 1 and not texto[0].isalpha():
+        texto = texto[1:]  # Apaga o primeiro caractere se não for letra
+    if len(texto) >= 2 and not texto[1].isalpha():
+        texto = texto[:1] + texto[2:]  # Apaga o segundo caractere se não for letra
+    if len(texto) >= 3 and not texto[2].isalpha():
+        texto = texto[:2] + texto[3:]  # Apaga o terceiro caractere se não for letra
+
+    # Condição para a quarta posição ser um número
+    if len(texto) >= 4 and not texto[3].isdigit():
+        texto = texto[:3]  # Apaga o quarto caractere se não for número
+
+    # Condição para a quinta posição (letra ou número é permitido, então não há validação aqui)
+
+    # Condição para a sexta e sétima posições serem números
+    if len(texto) >= 6 and not texto[5].isdigit():
+        texto = texto[:5]  # Apaga o sexto caractere se não for número
+    if len(texto) >= 7 and not texto[6].isdigit():
+        texto = texto[:6]  # Apaga o sétimo caractere se não for número
+
+    # Limita o texto a no máximo 7 caracteres
+    texto = texto[:7]
 
     # Atualiza o campo com o texto formatado
     placa.delete(0, tk.END)
@@ -236,7 +251,7 @@ def formatar_documento(event,documento):
     # Atualiza o campo de entrada com o texto formatado
     documento.delete(0, tk.END)
     documento.insert(0, texto)
-    documento.set(texto)
+    #documento.insert(texto)
 
 
 def formatar_validade(event,validade):
@@ -386,48 +401,59 @@ widgets_frame = ttk.LabelFrame( frame_principal, text="Insira os dados")
 widgets_frame.grid(row=0, column=0, padx=10, pady=10)
 
 #inserir cadastro
+label_i_c = ttk.Label( widgets_frame, text="Documento")
+label_i_c.grid(row=0, column=0, padx=5, pady=0,sticky="w")
 inserir_cadastro = ttk.Entry(widgets_frame)
-inserir_cadastro.insert(0,"Cadastro")
+inserir_cadastro.insert(0,"")
 inserir_cadastro.bind("<FocusIn>", lambda e: inserir_cadastro.delete(0, "end") if inserir_cadastro.get() == "Cadastro" else None)
-inserir_cadastro.grid(row=0,column=0,padx=5,pady=5,sticky="ew")
+inserir_cadastro.grid(row=1,column=0,padx=5,pady=5,sticky="ew")
 inserir_cadastro.bind("<KeyRelease>", lambda event: formatar_documento(event, inserir_cadastro))
 
 #Destino
+label_i_d = ttk.Label( widgets_frame, text="Destino:")
+label_i_d.grid(row=2, column=0, padx=5, pady=0,sticky="w")
 inserir_destino = ttk.Entry(widgets_frame)
-inserir_destino.insert(0,"Destino")
+inserir_destino.insert(0,"")
 inserir_destino.bind("<FocusIn>", lambda e:inserir_destino.delete("0","end"))
-inserir_destino.grid(row=1,column=0,padx=5,pady=5,sticky="ew")
+inserir_destino.grid(row=3,column=0,padx=5,pady=5,sticky="ew")
 
 #Obs
+label_i_o = ttk.Label( widgets_frame, text="OBS:")
+label_i_o.grid(row=4, column=0, padx=5, pady=0,sticky="w")
 inserir_obs = ttk.Entry(widgets_frame)
-inserir_obs.insert(0,"OBS")
+inserir_obs.insert(0,"")
 inserir_obs.bind("<FocusIn>", lambda e:inserir_obs.delete("0","end"))
-inserir_obs.grid(row=2,column=0,padx=5,pady=(5,50),sticky="ew")
-
-#botao salvar
-botao_salvar = tk.Button(widgets_frame, text="Salvar",command=salvar_pdf)
-botao_salvar.grid(row=7,column=0,padx=5,pady=5,sticky="ew")
-
-
-#botao para cadastro
-botao_novo_cadastro = tk.Button(widgets_frame, text="Novo Cadastro", command=nova_janela_cadastro)
-botao_novo_cadastro.grid(row=5,column=0,padx=5,pady=5,sticky="ew")
-
-#separador
-separador = ttk.Separator(widgets_frame)
-separador.grid(row=8,column=0,padx=5,pady=5,sticky="ew")
-
-#switch do tema
-botao_tema = ttk.Checkbutton(widgets_frame,text="Tema",style="Switch",command=mudar_tema)
-botao_tema.grid(row=9,column=0,padx=50,pady=(5,10),sticky="ew")
+inserir_obs.grid(row=5,column=0,padx=5,pady=(5,50),sticky="ew")
 
 #botao para registro
 botao_registro = tk.Button(widgets_frame, text="Registro", command=registrar)
-botao_registro.grid(row=4,column=0,padx=5,pady=5,sticky="ew")
+botao_registro.grid(row=6,column=0,padx=5,pady=5,sticky="ew")
+
+#botao para cadastro
+botao_novo_cadastro = tk.Button(widgets_frame, text="Novo Cadastro", command=nova_janela_cadastro)
+botao_novo_cadastro.grid(row=7,column=0,padx=5,pady=5,sticky="ew")
 
 #botao para apagar registro
 botao_apagar_registro = tk.Button(widgets_frame, text="Apagar", command=lambda: apagar (treeview))
-botao_apagar_registro.grid(row=6,column=0,padx=5,pady=5,sticky="ew")
+botao_apagar_registro.grid(row=8,column=0,padx=5,pady=5,sticky="ew")
+
+#separador
+separador = ttk.Separator(widgets_frame)
+separador.grid(row=9,column=0,padx=5,pady=5,sticky="ew")
+
+#botao salvar
+botao_salvar = tk.Button(widgets_frame, text="Salvar",command=salvar_pdf)
+botao_salvar.grid(row=10,column=0,padx=5,pady=5,sticky="ew")
+
+
+
+#switch do tema
+botao_tema = ttk.Checkbutton(widgets_frame,text="Tema",style="Switch",command=mudar_tema)
+botao_tema.grid(row=11,column=0,padx=50,pady=(5,10),sticky="ew")
+
+
+
+
 
 #criando a treeview do banco de dados
 treeFrame = ttk.Frame(frame_principal)
@@ -435,10 +461,10 @@ treeFrame.grid(row=0, column=1,padx=(0,20),pady=10)
 treeScroll = ttk.Scrollbar(treeFrame)
 treeScroll.pack(side="right",fill="y")
 
-colunas = ("ID","Documento","Nome","Validade","Militar","Veiculo","Placa","Cor","Destino","Hora","OBS")
+colunas = ("Documento","Nome","Validade","Militar","Veiculo","Placa","Cor","Destino","Hora","OBS")
 treeview = ttk.Treeview(treeFrame, show="headings", yscrollcommand=treeScroll.set, columns=colunas, height=20)
 
-treeview.column("ID",width=20,anchor="center")
+
 treeview.column("Documento",width=100,anchor="center")
 treeview.column("Nome",width=150,anchor="center")
 treeview.column("Validade",width=60,anchor="center")
@@ -449,6 +475,7 @@ treeview.column("Cor",width=100,anchor="center")
 treeview.column("Destino",width=100,anchor="center")
 treeview.column("Hora",width=53,anchor="center")
 treeview.column("OBS",width=100,anchor="center")
+
 
 
 treeview.pack()
