@@ -6,13 +6,33 @@ from datetime import datetime
 from fpdf import FPDF
 from tkinter import filedialog
 import pandas as pd
+import os
 
-#global proximo_ID = 1
+def criar_arquivo_excel():
+    nome_arquivo = "cadastro_do_pessoal.xlsx"  # Nome do arquivo Excel
+    
+    # Verifica se o arquivo já existe
+    if not os.path.exists(nome_arquivo):
+        # Cria um novo arquivo Excel
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        
+        # Define as colunas
+        colunas = ["Documento", "Nome", "Validade", "Militar", "Veiculo", "Placa", "Cor"]
+        sheet.append(colunas)  # Adiciona as colunas na primeira linha
+        
+        # Salva o arquivo
+        workbook.save(nome_arquivo)
+        print(f"{nome_arquivo} criado com sucesso.")
+    else:
+        print(f"{nome_arquivo} já existe.")
+
+# Chama a função no início do programa
+criar_arquivo_excel()
 
 def verifica_se_existe_cadastro(doc):
     #ler a tabela do excel
-    df = pd.read_excel('funcionarios.xlsx')
-
+    df = pd.read_excel('cadastro_do_pessoal.xlsx', usecols=["Documento"])
     #verifica se o documento já existe
     if doc in df['Documento'].values:
         print("este cadastro ja existe.")
@@ -28,14 +48,12 @@ def apagar(treeview):
     
     if not selecionado:
         # Se não houver seleção, exibe uma mensagem
-        print("Nao tem item selecionado")
         messagebox.showinfo("Nenhum item selecionado", "Por favor, selecione um item para deletar.")
         return
 
     # Deleta cada item selecionado
     for item in selecionado:
         treeview.delete(item)
-    print("Item deletado", "O item selecionado foi deletado com sucesso.")
     messagebox.showinfo("Item deletado", "O item selecionado foi deletado com sucesso.")
 
 
@@ -43,7 +61,7 @@ def registrar():
     cadastro = inserir_cadastro.get().strip()
     destino = inserir_destino.get().strip()
     obs = inserir_obs.get().strip()
-    
+
     # Verifica se os campos obrigatórios estão preenchidos
     if not cadastro:
         messagebox.showwarning("Campo Vazio", "Por favor, preencha o campo 'Cadastro'.")
@@ -53,46 +71,55 @@ def registrar():
         return
 
     # Lê a tabela do Excel
-    df = pd.read_excel('funcionarios.xlsx')
-
+    df = pd.read_excel('cadastro_do_pessoal.xlsx',dtype={'documento': int})
+   
     # Verifica se o cadastro existe
-    if cadastro not in df['Documento'].values:
+    if int(cadastro) not in df['Documento'].values:
         messagebox.showerror("Cadastro Não Encontrado", "Esse cadastro não existe.")
         return
     
     # Obtém os dados do cadastro
-    linha = df.loc[df['Documento'] == cadastro].iloc[0]
+    linha = df.loc[df['Documento'] == int(cadastro)].iloc[0]
+  
+    print(f"Índice da linha: xxxxxxxxxxxxxxxxxxxx {linha}")
+
+    # esse codigo faz a contagem do ID
+
+    num_linhas=len(treeview.get_children())
+
+    if len(treeview.get_children()) == 0:
+        num_linhas =1
+    else:
+        num_linhas += 1
+
+    print(f'Número de linhas: {num_linhas}')
+
     # Obtém a hora atual
     hora_atual = datetime.now().strftime("%H:%M:%S")
     if obs == "OBS":
         obs = ""
     linha = list(linha)
 
+    linha.insert(0,num_linhas)
     linha.append(destino)
     linha.append(hora_atual)
     linha.append(obs)
-    
-
-        
+     
     print(list(linha))
+
+    
+    
+    
 
     #imprime a lista na treewiew
     treeview.insert("","end", values=linha)
     # Obtenha outros dados conforme necessário
     
-    
-
-
     # Limpa os campos
     inserir_cadastro.delete(0, tk.END)
     inserir_destino.delete(0, tk.END)
     inserir_obs.delete(0, tk.END)
     
-
-
-    
-
-
 def salvar_pdf():
     # Abre uma janela de diálogo para o usuário escolher o local e nome do arquivo
     filepath = filedialog.asksaveasfilename(
@@ -135,16 +162,13 @@ def salvar_pdf():
 
 
 #Backend
-def carregar_dados():
-    path = r"C:\Users\GG\Desktop\app cadastro de entrada\funcionarios.xlsx"
-    arquivo_tabela = openpyxl.load_workbook(path)
-    tabela = arquivo_tabela.active
+#def carregar_dados():
+   # path = r"C:\Users\GG\Desktop\app cadastro de entrada\funcionarios.xlsx"
+  #  arquivo_tabela = openpyxl.load_workbook(path)
+  #  tabela = arquivo_tabela.active
 
-    lista_de_valores = list(tabela.values)
-    print(lista_de_valores)
-
-    for nome_na_tabela in colunas:
-        treeview.heading(nome_na_tabela, text=nome_na_tabela)
+   # for nome_na_tabela in colunas:
+   #     treeview.heading(nome_na_tabela, text=nome_na_tabela)
 
     #for valor_da_tabela in lista_de_valores[0:]:
      #   treeview.insert("",tk.END,values=valor_da_tabela)
@@ -153,30 +177,19 @@ def carregar_dados():
 
 def cadastrar(documento, nome, validade, militar_var, veiculo, placa, cor_entrada, nova_janela):
 
-    doc = documento.get()
+    doc = int(documento.get())
     nm = nome.get()
     val = validade.get()
     mil = militar_var.get()
     vec = veiculo.get()
     pl = placa.get()
     cor = cor_entrada.get()
-    verifica_se_existe_cadastro(doc)
+
     if verifica_se_existe_cadastro(doc) == True:
-        print("Esse cadastro ja esxite")
         nova_janela.destroy()
     else:
-        print("Cadastro Realizado:")
-        print(f"Documento: {doc}")
-        print(f"Nome: {nm}")
-        print(f"Validade: {val}")
-        print(f"É Militar: {mil}")
-        print(f"Veículo: {vec}")
-        print(f"Placa: {pl}")
-        print(f"Cor: {cor}")
-        
-
         #salvar dados na folha do excel
-        path = r"C:\Users\GG\Desktop\app cadastro de entrada\funcionarios.xlsx"
+        path = r"C:\Users\GG\Desktop\app cadastro de entrada\cadastro_do_pessoal.xlsx"
         arquivo_tabela = openpyxl.load_workbook(path)
         tabela = arquivo_tabela.active
         valor_das_linhas = [doc,nm,val,mil,vec,pl,cor]
@@ -185,11 +198,7 @@ def cadastrar(documento, nome, validade, militar_var, veiculo, placa, cor_entrad
 
         #inserir dados salvo na treeview
         #treeview.insert("",tk.END,values=valor_das_linhas)
-        
-       
-
-
-        print("cadastro realizado com sucesso")
+        inserir_cadastro.delete(0, tk.END)
         inserir_cadastro.insert(0,doc)
 
 
@@ -294,7 +303,7 @@ def nova_janela_cadastro():
 
     # Frame principal com texto de instrução
     frame_principal = ttk.Frame(nova_janela)
-    frame_principal.pack(padx=10, pady=10, fill="both")
+    frame_principal.pack(padx=0, pady=0, fill="x")
 
     # Texto de instrução no topo
     label_instrucao = ttk.Label(frame_principal, text="Insira os Dados", font=("Arial", 14))
@@ -401,7 +410,7 @@ widgets_frame = ttk.LabelFrame( frame_principal, text="Insira os dados")
 widgets_frame.grid(row=0, column=0, padx=10, pady=10)
 
 #inserir cadastro
-label_i_c = ttk.Label( widgets_frame, text="Documento")
+label_i_c = ttk.Label( widgets_frame, text="Documento:")
 label_i_c.grid(row=0, column=0, padx=5, pady=0,sticky="w")
 inserir_cadastro = ttk.Entry(widgets_frame)
 inserir_cadastro.insert(0,"")
@@ -426,15 +435,15 @@ inserir_obs.bind("<FocusIn>", lambda e:inserir_obs.delete("0","end"))
 inserir_obs.grid(row=5,column=0,padx=5,pady=(5,50),sticky="ew")
 
 #botao para registro
-botao_registro = tk.Button(widgets_frame, text="Registro", command=registrar)
+botao_registro = ttk.Button(widgets_frame, text="Registro", command=registrar)
 botao_registro.grid(row=6,column=0,padx=5,pady=5,sticky="ew")
 
 #botao para cadastro
-botao_novo_cadastro = tk.Button(widgets_frame, text="Novo Cadastro", command=nova_janela_cadastro)
+botao_novo_cadastro = ttk.Button(widgets_frame, text="Novo Cadastro", command=nova_janela_cadastro)
 botao_novo_cadastro.grid(row=7,column=0,padx=5,pady=5,sticky="ew")
 
 #botao para apagar registro
-botao_apagar_registro = tk.Button(widgets_frame, text="Apagar", command=lambda: apagar (treeview))
+botao_apagar_registro = ttk.Button(widgets_frame, text="Apagar", command=lambda: apagar (treeview))
 botao_apagar_registro.grid(row=8,column=0,padx=5,pady=5,sticky="ew")
 
 #separador
@@ -442,7 +451,7 @@ separador = ttk.Separator(widgets_frame)
 separador.grid(row=9,column=0,padx=5,pady=5,sticky="ew")
 
 #botao salvar
-botao_salvar = tk.Button(widgets_frame, text="Salvar",command=salvar_pdf)
+botao_salvar = ttk.Button(widgets_frame, text="Salvar",command=salvar_pdf)
 botao_salvar.grid(row=10,column=0,padx=5,pady=5,sticky="ew")
 
 
@@ -461,20 +470,44 @@ treeFrame.grid(row=0, column=1,padx=(0,20),pady=10)
 treeScroll = ttk.Scrollbar(treeFrame)
 treeScroll.pack(side="right",fill="y")
 
-colunas = ("Documento","Nome","Validade","Militar","Veiculo","Placa","Cor","Destino","Hora","OBS")
+colunas = ("ID","Documento","Nome","Validade","Militar","Veiculo","Placa","Cor","Destino","Hora","OBS")
 treeview = ttk.Treeview(treeFrame, show="headings", yscrollcommand=treeScroll.set, columns=colunas, height=20)
 
 
-treeview.column("Documento",width=100,anchor="center")
-treeview.column("Nome",width=150,anchor="center")
-treeview.column("Validade",width=60,anchor="center")
-treeview.column("Militar",width=35,anchor="center")
-treeview.column("Veiculo",width=60,anchor="center")
-treeview.column("Placa",width=70,anchor="center")
-treeview.column("Cor",width=100,anchor="center")
-treeview.column("Destino",width=100,anchor="center")
-treeview.column("Hora",width=53,anchor="center")
-treeview.column("OBS",width=100,anchor="center")
+# Configurando as colunas com larguras específicas e adicionando os cabeçalhos
+treeview.column("ID", width=20, anchor="center")
+treeview.heading("ID", text="ID")
+
+treeview.column("Documento", width=100, anchor="center")
+treeview.heading("Documento", text="Documento")
+
+treeview.column("Nome", width=150, anchor="center")
+treeview.heading("Nome", text="Nome")
+
+treeview.column("Validade", width=60, anchor="center")
+treeview.heading("Validade", text="Validade")
+
+treeview.column("Militar", width=35, anchor="center")
+treeview.heading("Militar", text="Militar")
+
+treeview.column("Veiculo", width=60, anchor="center")
+treeview.heading("Veiculo", text="Veículo")
+
+treeview.column("Placa", width=70, anchor="center")
+treeview.heading("Placa", text="Placa")
+
+treeview.column("Cor", width=100, anchor="center")
+treeview.heading("Cor", text="Cor")
+
+treeview.column("Destino", width=100, anchor="center")
+treeview.heading("Destino", text="Destino")
+
+treeview.column("Hora", width=53, anchor="center")
+treeview.heading("Hora", text="Hora")
+
+treeview.column("OBS", width=100, anchor="center")
+treeview.heading("OBS", text="OBS")
+
 
 
 
@@ -482,7 +515,7 @@ treeview.pack()
 treeScroll.config(command=treeview.yview)
 
 
-carregar_dados()
+#carregar_dados()
 
 
 #rodando nossa janela
