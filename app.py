@@ -108,10 +108,7 @@ def registrar():
     linha.append(obs)
      
     print(list(linha))
-
-    
-    
-    
+   
 
     #imprime a lista na treewiew
     treeview.insert("","end", values=linha)
@@ -145,7 +142,7 @@ def salvar_pdf():
     pdf.set_text_color(0, 0, 0)  # Cor do texto
 
     # Define a largura das colunas no PDF
-    largura_colunas = [25, 40, 20, 10, 30, 20, 15, 20, 20, 30]
+    largura_colunas = [30, 40, 20, 10, 30, 20, 15, 20, 20, 30]
     for col, largura in zip(colunas, largura_colunas):
         pdf.cell(w=largura, h=10, txt=col, border=1, align='C', fill=True)
     pdf.ln()  # Nova linha
@@ -160,21 +157,6 @@ def salvar_pdf():
     # Salva o PDF no caminho especificado
     pdf.output(filepath)
     print(f"PDF salvo em: {filepath}")
-
-
-
-#Backend
-#def carregar_dados():
-   # path = r"C:\Users\GG\Desktop\app cadastro de entrada\funcionarios.xlsx"
-  #  arquivo_tabela = openpyxl.load_workbook(path)
-  #  tabela = arquivo_tabela.active
-
-   # for nome_na_tabela in colunas:
-   #     treeview.heading(nome_na_tabela, text=nome_na_tabela)
-
-    #for valor_da_tabela in lista_de_valores[0:]:
-     #   treeview.insert("",tk.END,values=valor_da_tabela)
-
 
 
 def cadastrar(documento, nome, validade, militar_var, veiculo, placa, cor_entrada, nova_janela):
@@ -396,10 +378,6 @@ root.title("Cadastro de Entrada")
 
 #configuração do nosso tema
 style = ttk.Style(root)
-#root.tk.call("source", "forest-light.tcl")
-#root.tk.call("source", "forest-dark.tcl")
-
-#style.theme_use("forest-dark")
 
 #criando o espacos para os objetos frame principal
 frame_principal = ttk.Frame( root)
@@ -466,7 +444,6 @@ treeScroll.pack(side="right",fill="y")
 colunas = ("ID","Documento","Nome","Validade","Militar","Veiculo","Placa","Cor","Destino","Hora","OBS")
 treeview = ttk.Treeview(treeFrame, show="headings", yscrollcommand=treeScroll.set, columns=colunas, height=20)
 
-
 # Configurando as colunas com larguras específicas e adicionando os cabeçalhos
 treeview.column("ID", width=20, anchor="center")
 treeview.heading("ID", text="ID")
@@ -501,13 +478,8 @@ treeview.heading("Hora", text="Hora")
 treeview.column("OBS", width=100, anchor="center")
 treeview.heading("OBS", text="OBS")
 
-
-
-
 treeview.pack()
 treeScroll.config(command=treeview.yview)
-
-
 
 #rodando nossa janela
 root.mainloop()
