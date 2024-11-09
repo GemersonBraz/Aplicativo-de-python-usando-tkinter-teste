@@ -1,6 +1,6 @@
 # Sistema de Cadastro de Entrada de Pessoal
 
-Este repositório contém um sistema de cadastro de pessoal desenvolvido em Python, utilizando a biblioteca Tkinter para a interface gráfica e outras bibliotecas como `ttkbootstrap`, `openpyxl`, e `fpdf` para funcionalidades adicionais. O objetivo principal do projeto é permitir o registro, gerenciamento e exportação de dados de pessoal em um formato amigável.
+Este repositório contém um sistema de registro de entrada de pessoal desenvolvido em Python, utilizando a biblioteca Tkinter para a interface gráfica e outras bibliotecas como `ttkbootstrap`, `openpyxl`, e `fpdf` para funcionalidades adicionais. O objetivo principal do projeto é permitir o registro, gerenciamento e exportação de dados de pessoal em um formato amigável.
 
 ## Descrição do Projeto
 
