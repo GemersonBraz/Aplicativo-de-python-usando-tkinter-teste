@@ -1,5 +1,7 @@
-from tkinter import * 
 import tkinter as tk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+from ttkbootstrap.style import Style
 from tkinter import ttk, messagebox
 import openpyxl
 from datetime import datetime
@@ -210,9 +212,9 @@ def cadastrar(documento, nome, validade, militar_var, veiculo, placa, cor_entrad
 
 def mudar_tema():
     if botao_tema.instate(["selected"]):
-        style.theme_use("forest-light")
+        style = Style(theme="cerculean")
     else:
-        style.theme_use("forest-dark")
+        style = Style(theme="superhero")
 
 
 def formatar_placa(event,placa):
@@ -380,27 +382,24 @@ def nova_janela_cadastro():
 
     nova_janela.bind("<Escape>", fechar_janela)
 
-    
-    
-    
-
-
-
 #---------------------------------------------------------------------------------
-
 
 #iniciando nossa janela
 
 root = tk.Tk()
+
+root.iconbitmap("C:/Users/GG/Desktop/app cadastro de entrada/icon_2.ico")
+
+style = Style(theme="superhero")
 #titulo do app
 root.title("Cadastro de Entrada")
 
 #configuração do nosso tema
 style = ttk.Style(root)
-root.tk.call("source", "forest-light.tcl")
-root.tk.call("source", "forest-dark.tcl")
+#root.tk.call("source", "forest-light.tcl")
+#root.tk.call("source", "forest-dark.tcl")
 
-style.theme_use("forest-dark")
+#style.theme_use("forest-dark")
 
 #criando o espacos para os objetos frame principal
 frame_principal = ttk.Frame( root)
@@ -454,15 +453,9 @@ separador.grid(row=9,column=0,padx=5,pady=5,sticky="ew")
 botao_salvar = ttk.Button(widgets_frame, text="Salvar",command=salvar_pdf)
 botao_salvar.grid(row=10,column=0,padx=5,pady=5,sticky="ew")
 
-
-
 #switch do tema
-botao_tema = ttk.Checkbutton(widgets_frame,text="Tema",style="Switch",command=mudar_tema)
+botao_tema = ttk.Checkbutton(widgets_frame,bootstyle="round-toggle",command=mudar_tema)
 botao_tema.grid(row=11,column=0,padx=50,pady=(5,10),sticky="ew")
-
-
-
-
 
 #criando a treeview do banco de dados
 treeFrame = ttk.Frame(frame_principal)
@@ -515,39 +508,6 @@ treeview.pack()
 treeScroll.config(command=treeview.yview)
 
 
-#carregar_dados()
-
 
 #rodando nossa janela
 root.mainloop()
-"""
-#na segunda tela teremos o cadastro dos seguintes elementos
-
-
-"""
-#validade
-
-#émilitar?
-#veiculo
-#cor
-#placa
-#destino
-#hora
-
-
-
-
-
-#botao editar cadastro
-#
-#
-#
-#
-
-
-#
-#
-#
-#
-#
-
